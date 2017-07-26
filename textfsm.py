@@ -177,7 +177,13 @@ class TextFSMOptions(object):
       self.OnClearAllVar()
 
     def OnAssignVar(self):
-      self._value.append(self.value.value)
+      match = re.match(self.value.regex, self.value.value)
+      # If the List-value regex has match-groups defined, add the grouped results to the list
+      # Otherwise, add the string that was matched
+      if match and match.groupdict():
+          self._value.append(match.groupdict())
+      else:
+          self._value.append(self.value.value)
 
     def OnClearVar(self):
       if 'Filldown' not in self.value.OptionNames():
@@ -917,7 +923,9 @@ class TextFSM(object):
       matched: (regexp.match) Named group for each matched value.
       value: (str) The matched value.
     """
-    self._GetValue(value).AssignVar(matched.group(value))
+    _value = self._GetValue(value)
+    if _value is not None:
+        _value.AssignVar(matched.group(value))
 
   def _Operations(self, rule):
     """Operators on the data record.
